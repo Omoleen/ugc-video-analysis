@@ -5,27 +5,13 @@ services:
   - type: web
     name: ugc-video-analysis
     runtime: python
-    region: oregon  # or your preferred region
-    plan: free  # or starter for more resources
+    region: oregon
+    plan: free
     buildCommand: pip install uv && uv sync --frozen --no-dev
     startCommand: uv run uvicorn app.main:api --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
-      - key: SLACK_BOT_TOKEN
-        sync: false  # Will prompt for value on first deploy
-      - key: SLACK_SIGNING_SECRET
-        sync: false
-      - key: VIDEO_REVIEW_CHANNEL
-        sync: false
-      - key: APPROVED_CONTENT_CHANNEL
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_MODEL
-        value: gemini-2.5-flash
-      - key: SCORE_THRESHOLD
-        value: "80"
-      - key: DATABASE_URL
-        sync: false  # Set to your Neon PostgreSQL connection string
+      # All other env vars (SLACK_BOT_TOKEN, GEMINI_API_KEY, DATABASE_URL, etc.)
+      # should be set via linked Environment Group in Render dashboard
