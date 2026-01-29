@@ -26,6 +26,9 @@ def get_database_url() -> str:
         elif url.startswith("postgresql://"):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+        # asyncpg uses 'ssl' instead of 'sslmode' (Neon uses sslmode)
+        url = url.replace("sslmode=", "ssl=")
+
         return url
 
     # Default to SQLite for local development
