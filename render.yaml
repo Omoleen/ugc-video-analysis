@@ -1,0 +1,42 @@
+# Render Blueprint
+# Deploy with: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: ugc-video-analysis
+    runtime: python
+    region: oregon  # or your preferred region
+    plan: free  # or starter for more resources
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run uvicorn app.main:api --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: SLACK_BOT_TOKEN
+        sync: false  # Will prompt for value on first deploy
+      - key: SLACK_SIGNING_SECRET
+        sync: false
+      - key: VIDEO_REVIEW_CHANNEL
+        sync: false
+      - key: APPROVED_CONTENT_CHANNEL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-pro
+      - key: SCORE_THRESHOLD
+        value: "80"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ugc-video-db
+          property: connectionString
+        # Note: Render's connection string starts with postgres://
+        # The app handles this automatically
+
+databases:
+  - name: ugc-video-db
+    plan: free  # Free tier: 1GB storage, 97 hours/month compute
+    region: oregon
+    databaseName: ugc_reviews
+    user: ugc_user
