@@ -7,11 +7,13 @@ services:
       - .env
     volumes:
       - ./app:/app/app        # Hot reload for development
+      - ./alembic.ini:/app/alembic.ini
+      - ./migrations:/app/migrations
       - /tmp/ugc_videos:/tmp/ugc_videos
       - ./data:/app/data      # Persist database across restarts
     environment:
       - PYTHONUNBUFFERED=1
-    command: uv run uvicorn app.main:api --host 0.0.0.0 --port 3000 --reload
+    command: sh -c "uv run alembic upgrade head && uv run uvicorn app.main:api --host 0.0.0.0 --port 3000 --reload"
 
   # Optional: ngrok for exposing local server to Slack
   # Uncomment if you want to use ngrok via Docker instead of running it separately

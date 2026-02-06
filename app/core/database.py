@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 
@@ -39,7 +38,10 @@ def get_database_url() -> str:
 
 
 async def init_db() -> None:
-    """Initialize the database engine and create all tables."""
+    """Initialize the database engine.
+
+    Tables are managed by Alembic migrations (run `alembic upgrade head`).
+    """
     global engine
 
     database_url = get_database_url()
@@ -53,12 +55,6 @@ async def init_db() -> None:
         echo=False,
         connect_args=connect_args,
     )
-
-    # Import models to register them with SQLModel.metadata
-    from app.models import pending_approval  # noqa: F401
-
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
 
     db_type = "SQLite" if is_sqlite else "PostgreSQL"
     logger.info(f"Database initialized ({db_type})")

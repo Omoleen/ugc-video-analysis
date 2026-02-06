@@ -11,6 +11,10 @@ COPY pyproject.toml uv.lock README.md ./
 # Install dependencies (frozen from lock file)
 RUN uv sync --frozen --no-dev
 
+# Copy Alembic config and migrations
+COPY alembic.ini ./
+COPY migrations/ ./migrations/
+
 # Copy application code
 COPY app/ ./app/
 
@@ -20,4 +24,4 @@ RUN mkdir -p /tmp/ugc_videos
 EXPOSE 3000
 
 # Run with uv (uses the virtual env it created)
-CMD ["uv", "run", "uvicorn", "app.main:api", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn app.main:api --host 0.0.0.0 --port 3000"]
