@@ -17,5 +17,4 @@ class PendingApproval(SQLModel, table=True):
     review_text: str
     virality_tier: str | None = None
     caption: str | None = None
-    video_path: str | None = None  # Path to temporarily stored video for comment generation
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

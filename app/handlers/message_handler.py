@@ -9,8 +9,6 @@ from app.services import (
     analyze_video,
     download_file,
     cleanup_file,
-    move_to_approved,
-    cleanup_old_approved_videos,
     generate_engagement_comments,
 )
 from app.repositories import ApprovalRepository
@@ -92,11 +90,6 @@ async def _handle_video_upload(event: dict, say, client) -> None:
     if not video_files:
         return
 
-    # Clean up any old approved videos (>24h) on each upload
-    cleaned = cleanup_old_approved_videos(max_age_hours=24)
-    if cleaned:
-        logger.info(f"Cleaned up {cleaned} old approved video(s)")
-
     # Process the first video file
     video_file = video_files[0]
     user_id = event.get("user")
@@ -141,10 +134,10 @@ async def _handle_video_upload(event: dict, say, client) -> None:
         is_approved = review.overall_score >= settings.score_threshold
 
         if is_approved:
-            # Move video to approved storage for comment generation
-            approved_video_path = move_to_approved(local_path, message_ts)
+            # Clean up the video immediately after analysis
+            cleanup_file(local_path)
 
-            # Store for later link collection (with video path)
+            # Store for later link collection
             await ApprovalRepository.save(
                 thread_ts=message_ts,
                 user_id=user_id,
@@ -153,7 +146,6 @@ async def _handle_video_upload(event: dict, say, client) -> None:
                 review_text=formatted_review,
                 virality_tier=review.virality_tier,
                 caption=caption,
-                video_path=str(approved_video_path),
             )
 
             await say(
@@ -216,8 +208,7 @@ async def _handle_thread_reply(event: dict, say, client, thread_ts: str) -> None
 
     logger.info(f"Found social links in thread {thread_ts}: {links}")
 
-    # Get video path and fallback summary for comment generation
-    video_path = pending.video_path
+    # Get review summary for comment generation
     video_summary = _create_video_summary(pending.review_text)
     caption = pending.caption
     comments_sections = []
@@ -233,7 +224,6 @@ async def _handle_thread_reply(event: dict, say, client, thread_ts: str) -> None
                 comments = await generate_engagement_comments(
                     platform=platform,
                     post_url=url,
-                    video_path=video_path,
                     video_summary=video_summary,
                     caption=caption,
                 )
@@ -281,10 +271,6 @@ async def _handle_thread_reply(event: dict, say, client, thread_ts: str) -> None
             ),
             thread_ts=thread_ts,
         )
-
-        # Clean up the stored video
-        if video_path:
-            cleanup_file(video_path)
 
         # Remove from pending approvals
         await ApprovalRepository.delete(thread_ts)

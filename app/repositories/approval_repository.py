@@ -22,7 +22,6 @@ class ApprovalRepository:
         review_text: str,
         virality_tier: str | None,
         caption: str | None,
-        video_path: str | None = None,
     ) -> PendingApproval:
         """Save or update a pending approval."""
         async with await get_session() as session:
@@ -35,7 +34,6 @@ class ApprovalRepository:
                 existing.review_text = review_text
                 existing.virality_tier = virality_tier
                 existing.caption = caption
-                existing.video_path = video_path
                 session.add(existing)
                 approval = existing
             else:
@@ -47,7 +45,6 @@ class ApprovalRepository:
                     review_text=review_text,
                     virality_tier=virality_tier,
                     caption=caption,
-                    video_path=video_path,
                 )
                 session.add(approval)
 

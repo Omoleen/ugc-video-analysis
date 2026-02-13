@@ -18,9 +18,6 @@ COPY migrations/ ./migrations/
 # Copy application code
 COPY app/ ./app/
 
-# Create temp directory for video downloads
-RUN mkdir -p /tmp/ugc_videos
-
 EXPOSE 3000
 
 # Run with uv (uses the virtual env it created)
